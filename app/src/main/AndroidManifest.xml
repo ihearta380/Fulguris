@@ -229,12 +229,16 @@
             android:process=":incognito"
             android:theme="@style/Theme.App.DayNight"
             android:windowSoftInputMode="stateHidden|adjustResize"
+            android:icon="@mipmap/ic_launcher_incognito"
+            android:roundIcon="@mipmap/ic_launcher_incognito_round"
             android:exported="true">
 
             <!--
             Incognito (Stealth) is no longer a separate launcher icon: it is a dynamic
             launcher app shortcut instead (long-press the app icon → "Stealth", see
             App.registerIncognitoShortcut), so there is no MAIN/LAUNCHER filter here.
+            The per-activity icon is kept so the task in Recents (and any other place
+            that renders this activity's icon) still shows the stealth icon.
             -->
 
             <!--  Handle various mime types and allow being used as default viewer -->
