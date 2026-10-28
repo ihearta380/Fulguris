@@ -26,6 +26,10 @@ Updated: 2026-10-28
 - Baseline command: `.venv/bin/python scripts/tools/build.py` with `GRADLE_USER_HOME`,
   `JAVA_HOME`, `ANDROID_HOME`, and `ANDROID_SDK_ROOT` set as documented →
   **BUILD SUCCESSFUL**, `:app:assembleSlionsFullAgentDebug` (93 tasks).
+- Revalidated with the committed upstream `app/build.gradle` restored
+  temporarily; the project build tool reported **BUILD SUCCESSFUL** for the
+  upstream variant, with its compile/package tasks already up-to-date from the
+  initial successful baseline build.
 - Baseline APK: `app/build/outputs/apk/slionsFullAgent/debug/Fulguris-v2.1.2-slions-full-agent-debug.apk`; 20,896,724 bytes; SHA256
   `ac430f6102caf988a641af26e2daa3eef0e63f7457fed829cf0e42e5934615d7`;
   package `net.slions.fulguris.full.agent.debug`; launch activity
@@ -66,15 +70,22 @@ Updated: 2026-10-28
   errors.
 - `.venv/bin/python scripts/tests/run.py --all --group smoke --package
   com.timison.browser.next.full.agent.debug --no-save` → **NOT RUN**: project
-  tooling reported `No devices connected over adb`. ADB daemon access is also
-  restricted in the environment. Pixel 10 installation, package coexistence,
-  screenshots and all requested browser feature tests remain **NOT VERIFIED**.
+  tooling reported `No devices connected over adb`. Pixel 10 installation,
+  package coexistence, screenshots and all requested browser feature tests
+  remain **NOT VERIFIED**.
 - `.venv/bin/python scripts/tests/run.py --list` → **PASS**, test suite imports
   and enumerates. This is test discovery only, not execution of browser tests.
 - `.venv/bin/python scripts/tools/install.py --all --build-type timisonDebug`
   → **NOT RUN**, `No devices connected over adb`; no APK installation was
   attempted.
 - No install, uninstall, clear-data, or external app package operation ran.
+
+## Branch and review
+
+- Development branch: `timison-browser-next-development`, pushed to `origin`
+  (`ihearta380/Fulguris`).
+- Draft pull request: [#1 Add Timison Browser Next build
+  variant](https://github.com/ihearta380/Fulguris/pull/1), targeting `main`.
 
 ## Milestone C — networking architecture
 
