@@ -101,6 +101,7 @@ TEST_DESCRIPTIONS = {**suite.TEST_DESCRIPTIONS, **smoke_tests.TEST_DESCRIPTIONS,
 FEATURE_GROUPS = dict(smoke_tests.FEATURE_GROUPS)
 FEATURE_GROUPS.update(cursor_tests.FEATURE_GROUPS)
 FEATURE_GROUPS["cursor"] = cursor_tests.ALL_TESTS
+FEATURE_GROUPS["url-field"] = suite.ALL_TESTS  # the whole address-bar field suite
 FEATURE_GROUPS.update(rotation_tests.FEATURE_GROUPS)
 FEATURE_GROUPS.update(settings_tests.FEATURE_GROUPS)
 FEATURE_GROUPS.update(toolbar_hide_tests.FEATURE_GROUPS)

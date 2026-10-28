@@ -159,6 +159,102 @@ def test_dpad_edit_selects_all(device, ctx: dict) -> None:
     assert text.strip().lower() == "z", f"typing should replace the whole URL, got '{text}'"
 
 
+def test_edit_selection_immediate_early_type_replaces(device, ctx: dict) -> None:
+    """Typing *immediately* after entering edit — before the host's 400 ms selection
+    guard would have run — must still REPLACE the URL.
+
+    Regression: selection used to happen only in a delayed post, so typing within that
+    ~300 ms window appended to the tail of the unselected URL (intermittent on slow
+    devices). The fix selects the URL synchronously the instant edit mode is entered, so
+    an immediately-typed character always replaces it.
+    """
+    device.navigate(KNOWN_URL, reset=False)
+    _focus_field_for_navigation(device)
+    device.key(keys.DPAD_CENTER, wait=0.0)   # enter edit; no settle
+    device.type_text("X", wait=0.0)          # type immediately; no settle
+    # Poll briefly for the field to settle to the (replaced) text.
+    text = ""
+    for _ in range(12):
+        text = device.field_text().strip().lower()
+        if text == "x":
+            break
+        time.sleep(0.15)
+    assert text == "x", \
+        ("typing immediately after entering edit must replace the URL (i.e. it was "
+         "selected the instant edit started), got %r" % text)
+
+
+def test_tap_edit_selection_immediate_early_type_replaces(device, ctx: dict) -> None:
+    """Tap the field to enter edit and type *immediately* (well before the host's
+    400 ms selection guard) — the URL must still be REPLACED.
+
+    The touch path used to place the cursor at the tap point and only (re)select on the
+    host's 400 ms delayed guard, so a keystroke within that window appended to the tail of
+    the URL instead of replacing it — "sometimes the URL isn't selected". The fix
+    (re)selects the URL on the frame after the tap, so an immediately-typed character
+    always replaces it. This is the touch counterpart of the D-pad selection test.
+    """
+    device.navigate(KNOWN_URL, reset=False)
+    center = device.field_center()
+    assert center, "could not locate the address field bounds"
+    # Defocus first (tap the web view) so the tap below genuinely starts the edition.
+    device.tap(360, 800, wait=0.5)
+    # Tap the field and type right away, with no settle — this is the race window.
+    device.tap(center[0], center[1], wait=0.0)
+    device.type_text("X", wait=0.0)
+    # Poll briefly for the field to settle to the (replaced) text.
+    text = ""
+    for _ in range(12):
+        text = device.field_text().strip().lower()
+        if text == "x":
+            break
+        time.sleep(0.15)
+    assert text == "x", \
+        ("typing immediately after TAPPING the field must replace the URL (i.e. it was "
+         "selected the instant edit started, not after the 400 ms guard), got %r" % text)
+
+
+def test_repeated_focus_edit_cycles_keep_consistent(device, ctx: dict) -> None:
+    """Repeatedly focus the field, type, and leave — mixing keyboard/D-pad and touch
+    entry — and every cycle must (a) reset the field to the label when focus leaves,
+    and (b) end with the unfocused label (never a raw URL or leftover typed text).
+
+    A single-shot test can pass while a later cycle misbehaves, so this loops the
+    focus/edit/defocus dance with both input paths and asserts the invariants each
+    time. Catches stale-typed-text and stale-selection regressions.
+    """
+    device.navigate(KNOWN_URL, reset=False)
+    label = device.field_text()
+    assert label, "precondition: field should show a label before the test"
+
+    for i in range(3):
+        # Cycle A — keyboard / D-pad entry, then move focus away (D-pad down to webview).
+        _enter_edit(device)
+        device.type_text("a%d" % i, wait=0.4)
+        device.key(keys.BACK, wait=0.6)        # hide keyboard, still editing
+        device.key(keys.DPAD_DOWN, wait=0.7)   # plain focus loss -> label
+        after = device.field_text()
+        assert ("a%d" % i) not in after.lower(), \
+            ("cycle %d (D-pad): typed text %r still shown after focus left; the label "
+             "should be back (got %r)" % (i, "a%d" % i, after))
+
+        # Cycle B — touch/tap entry, then two-stage back to cancel.
+        center = device.field_center()
+        assert center, "could not locate the field bounds (cycle %d)" % i
+        device.tap(center[0], center[1], wait=0.8)
+        device.type_text("b%d" % i, wait=0.4)
+        device.key(keys.BACK, wait=0.6)        # hide keyboard
+        device.key(keys.BACK, wait=0.6)        # cancel -> label
+        after2 = device.field_text()
+        assert ("b%d" % i) not in after2.lower(), \
+            ("cycle %d (touch): typed text %r still shown after cancel; the label "
+             "should be back (got %r)" % (i, "b%d" % i, after2))
+
+    final = device.field_text()
+    assert not final.lower().startswith("http"), \
+        "after all cycles the unfocused field must show the label, not the URL, got %r" % final
+
+
 # --- Tests -----------------------------------------------------------------
 
 
@@ -240,6 +336,41 @@ def test_down_from_navigation_returns_to_web(device, ctx: dict) -> None:
     assert device.field_focused(), "precondition: field focused for navigation"
     device.key(keys.DPAD_DOWN, wait=0.8)
     assert not device.field_focused(), "down from navigation should leave the field"
+
+
+def test_field_resets_to_label_when_focus_moved_away(device, ctx: dict) -> None:
+    """Typing in the address field, then moving focus to another element (e.g. the
+    web view via D-pad down) must reset the field to the current tab's label.
+
+    The field shows the label in every non-editing state; the typed characters are
+    only meaningful while editing. On a broken build the focus-loss path never calls
+    the host's onEditEnd(), so the typed text stays visible in the pill even though
+    the field no longer has focus.
+    """
+    device.navigate(KNOWN_URL, reset=False)
+    label = device.field_text()
+    assert label, "precondition: field should show a label before the test"
+
+    # Enter edit mode (focus + select all) and type some characters.
+    _enter_edit(device)
+    device.type_text("stale", wait=0.6)
+    typed = device.field_text()
+    assert "stale" in typed.lower(), (
+        "precondition: typed text should be visible while editing, got %r" % typed)
+
+    # Hide the keyboard (stays in edit mode) so the field text is readable.
+    device.key(keys.BACK, wait=0.8)
+
+    # Move focus to another element (the web view) — this is the plain focus loss
+    # that must reset the field back to the label.
+    device.key(keys.DPAD_DOWN, wait=0.8)
+    assert not device.field_focused(), "D-pad down should move focus off the field"
+
+    # The field must show the label again, not the stale typed characters.
+    final = device.field_text()
+    assert "stale" not in final.lower(), (
+        "field still shows typed text %r after focus moved away; it should reset "
+        "to the label %r" % (final, label))
 
 
 def test_suggestions_navigable_without_touch(device, ctx: dict) -> None:
@@ -602,10 +733,14 @@ ALL_TESTS = [
     test_center_enters_edit_mode,
     test_edit_shows_url,
     test_dpad_edit_selects_all,
+    test_edit_selection_immediate_early_type_replaces,
+    test_tap_edit_selection_immediate_early_type_replaces,
+    test_repeated_focus_edit_cycles_keep_consistent,
     test_type_and_validate_navigates,
     test_back_two_stage_keyboard_then_cancel,
     test_back_from_navigation_returns_to_web,
     test_down_from_navigation_returns_to_web,
+    test_field_resets_to_label_when_focus_moved_away,
     test_suggestions_navigable_without_touch,
     test_touch_tap_enters_edit,
     test_retap_after_cancel_reenters_edit,
@@ -634,10 +769,14 @@ TEST_DESCRIPTIONS = {
     "test_center_enters_edit_mode": "D-pad center/enter enters edit mode and shows the keyboard",
     "test_edit_shows_url": "Edit mode shows the URL, not the label",
     "test_dpad_edit_selects_all": "Entering edit via D-pad selects all, so typing replaces the URL",
+    "test_edit_selection_immediate_early_type_replaces": "Typing immediately after entering edit replaces the URL (selection is established at once, not after the 400 ms guard)",
+    "test_tap_edit_selection_immediate_early_type_replaces": "Typing immediately after TAPPING the field replaces the URL (touch path selects on the frame after the tap, not after the 400 ms guard)",
+    "test_repeated_focus_edit_cycles_keep_consistent": "Repeated focus/type/leave cycles (D-pad + touch) always reset to the label with no stale typed text or leftover URL",
     "test_type_and_validate_navigates": "Typing a URL and pressing enter navigates and returns focus to the web view",
     "test_back_two_stage_keyboard_then_cancel": "First back hides the keyboard, second back cancels back to the label",
     "test_back_from_navigation_returns_to_web": "Back from navigation focus returns to the web view",
     "test_down_from_navigation_returns_to_web": "D-pad down from navigation focus leaves the field for the web view",
+    "test_field_resets_to_label_when_focus_moved_away": "Moving focus off the address field (after typing) resets it to the label, not the typed text",
     "test_suggestions_navigable_without_touch": "Suggestions popup can be navigated and opened with D-pad only",
     "test_touch_tap_enters_edit": "Touch tap on the field goes straight to edit mode with keyboard",
     "test_retap_after_cancel_reenters_edit": "Tapping again after a cancel re-enters edit mode",

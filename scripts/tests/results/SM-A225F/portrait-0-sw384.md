@@ -1,11 +1,11 @@
 # Test run — SM-A225F · portrait-0-sw384
 
-- **When:** 2026-10-12T17:42:36+00:00
+- **When:** 2026-10-27T21:56:06+00:00
 - **Device:** Galaxy A22 5G (Samsung SM-A225F) — Android 13
 - **Config:** portrait, rotation 0°, smallest width 384dp
 - **Package:** `net.slions.fulguris.full.agent.debug`
-- **Options:** restart=False, keep_tabs=False, orientation=default, filter=test_back_two_tabs
-- **Result:** 100/112 passed in 37.6s (1 ran, 111 carried forward)
+- **Options:** restart=False, keep_tabs=False, orientation=default, filter=field_resets_to_label_when_focus_moved_away
+- **Result:** 100/113 passed in 29.0s (1 ran, 112 carried forward)
 
 | Test | Description | Result | Duration |
 |---|---|---|---|
@@ -26,7 +26,8 @@
 | `test_edit_shows_url` | Edit mode shows the URL, not the label | ✅ pass ⏸ | 13.7s |
 | `test_dpad_edit_selects_all` | Entering edit via D-pad selects all, so typing replaces the URL | ✅ pass ⏸ | 17.5s |
 | `test_type_and_validate_navigates` | Typing a URL and pressing enter navigates and returns focus to the web view | ✅ pass ⏸ | 18.1s |
-| `test_back_two_stage_keyboard_then_cancel` | First back hides the keyboard, second back cancels back to the label | ✅ pass ⏸ | 24.7s |
+| `test_back_two_stage_keyboard_then_cancel` | First back hides the keyboard, second back cancels back to the label | ❌ fail ⏸ | 16.0s |
+| | _first back should hide the keyboard_ | | |
 | `test_back_from_navigation_returns_to_web` | Back from navigation focus returns to the web view | ✅ pass ⏸ | 15.8s |
 | `test_down_from_navigation_returns_to_web` | D-pad down from navigation focus leaves the field for the web view | ✅ pass ⏸ | 16.0s |
 | `test_suggestions_navigable_without_touch` | Suggestions popup can be navigated and opened with D-pad only | ✅ pass ⏸ | 20.6s |
@@ -81,11 +82,11 @@
 | `test_toolbar_rehides_after_back_reshow` | After an auto-hide, back re-shows the tool bar (web view keeps focus) and it auto-hides again - the countdown is re-armed at re-show | ✅ pass ⏸ | 43.3s |
 | `test_cursor_toolbar_rehides_after_back_reshow` | With the cursor on (TV) the same back-reshow cycle auto-hides again - the non-focusable cursor overlay must not prevent the re-arm | ✅ pass ⏸ | 0.0s |
 | `test_toolbar_disabled_at_zero` | A timeout of 0 disables the feature (the tool bar never auto-hides) | ✅ pass ⏸ | 31.2s |
-| `test_back_two_tabs_keeps_foreground` | Back with a tab to close closes the top tab, not finish the app (regression: predictive back bypassing onBackPressed) | ✅ pass | 35.6s |
-| `test_back_last_tab_stays_foreground` | Back on the last tab closes it (start page), not finish the app | ✅ pass ⏸ | 21.2s |
-| `test_back_editing_two_stage_exit` | Back while editing the URL field: first press hides the keyboard, second press cancels back to the label | ❌ fail ⏸ | 22.8s |
+| `test_back_two_tabs_keeps_foreground` | Back with a tab to close closes the top tab, not finish the app (regression: predictive back bypassing onBackPressed) | ✅ pass ⏸ | 35.9s |
+| `test_back_last_tab_stays_foreground` | Back on the last tab closes it (start page), not finish the app | ✅ pass ⏸ | 21.8s |
+| `test_back_editing_two_stage_exit` | Back while editing the URL field: first press hides the keyboard, second press cancels back to the label | ❌ fail ⏸ | 22.5s |
 | | _first back should hide the keyboard_ | | |
-| `test_settings_back_from_nested_no_crash` | Back from a nested settings screen (Appearance > Portrait) pops the nested screen back to the parent and keeps back usable until it exits, without crashing or getting stuck | ✅ pass ⏸ | 39.4s |
+| `test_settings_back_from_nested_no_crash` | Back from a nested settings screen (Appearance > Portrait) pops the nested screen back to the parent and keeps back usable until it exits, without crashing or getting stuck | ✅ pass ⏸ | 39.6s |
 | `test_downloads_sheet_survives_active_download` | Opening the downloads sheet while a download is in progress must not crash the app (regression: NoSuchMethodError in ContentObserver, issue #802) | ✅ pass ⏸ | 35.6s |
 | `test_no_launch_dialog_for_plain_site` | Typing a plain https site shows no 'Launch third-party app?' dialog (EMUI wildcard-authority regression, #542). | ✅ pass ⏸ | 117.7s |
 | `test_launch_dialog_for_specialized_handler` | A Play Store details URL still shows the launch dialog listing the Play Store (the #542 host-matching fix must not over-filter real specialized handlers). | ✅ pass ⏸ | 25.2s |
@@ -133,3 +134,4 @@
 | `test_in_tab_back_not_confused_with_field_edit` | Back with in-page history and an unfocused address field still steps the page history (the two-stage edit exit does not swallow it) | ❌ fail ⏸ | 106.8s |
 | | _page A did not load_ | | |
 | `test_bookmarks_page_folder_longpress_no_crash` | Long-pressing a folder box on the bookmarks page shows the folder menu instead of crashing (regression: StringIndexOutOfBoundsException in showLongPressedDialogForBookmarkUrl) | ✅ pass ⏸ | 182.4s |
+| `test_field_resets_to_label_when_focus_moved_away` | Moving focus off the address field (after typing) resets it to the label, not the typed text | ✅ pass | 27.9s |
