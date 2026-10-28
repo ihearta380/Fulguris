@@ -75,6 +75,8 @@ AGENT_VARIANTS = {
     # Play Store AAB (Google Play release build).
     "playstoreRelease": (":app:bundleSlionsFullPlaystoreRelease",
                          "app/build/outputs/bundle/slionsFullPlaystoreRelease/*.aab"),
+    "timisonDebug": (":app:assembleTimisonFullAgentDebug",
+                     "app/build/outputs/apk/timisonFullAgent/debug/*.apk"),
 }
 DEFAULT_BUILD_TYPE = "agentDebug"
 

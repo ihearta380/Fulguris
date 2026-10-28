@@ -69,6 +69,11 @@ android {
                 srcDirs += generatedLocaleListDir
             }
         }
+        // Timison is a rebrand of the upstream Slions edition and keeps its
+        // edition-specific seed data and non-translatable contact metadata.
+        timison {
+            res.srcDir("src/slions/res")
+        }
     }
 
     buildTypes {
@@ -131,6 +136,15 @@ android {
             applicationId "net.slions.fulguris"
             versionCode libs.versions.slions.version.code.get().toInteger()
             versionName libs.versions.slions.version.name.get()
+        }
+
+        // Timison fork variant. Separate package identity keeps it alongside
+        // the upstream browser and the existing Timison applications.
+        timison {
+            dimension "BRAND"
+            applicationId "com.timison.browser.next"
+            versionCode libs.versions.slions.version.code.get().toInteger()
+            versionName libs.versions.slions.version.name.get() + "-timison"
         }
 
         /*
@@ -206,8 +220,8 @@ android {
     // Filter out invalid variants
     variantFilter { variant ->
         def names = variant.flavors*.name
-        // slions variant do not support base version and undef publisher
-        if (names.contains("slions") && (names.contains("undef") || names.contains("base"))) {
+        // slions and timison variants do not support base version and undef publisher
+        if ((names.contains("slions") || names.contains("timison")) && (names.contains("undef") || names.contains("base"))) {
             // Gradle ignores any variants that satisfy the conditions above.
             setIgnore(true)
         }
