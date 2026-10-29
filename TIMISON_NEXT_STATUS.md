@@ -176,10 +176,14 @@ were changed. No Tor or AWS dependency was introduced.
   active tab restoration after app restart. The test is registered and listed;
   it has **not run on a device** because ADB reports no devices.
 - GitHub push succeeded using a fixed-size HTTP request after normal chunked
-  sends failed. Commit `768d0626` is on the fork branch. Timison workflow run
-  `40798101613` was observed in progress: checkout, JDK, Python, Android SDK
-  setup, and PyYAML setup passed; APK build was running. Artifact upload and
-  final workflow result are pending the run completing.
+  sends failed. Commit `0d7f0a49` is on the fork branch. Timison workflow run
+  [40798390886](https://github.com/ihearta380/Fulguris/actions/runs/40798390886)
+  **PASSED** on that commit: checkout, JDK, Python, Android SDK setup, PyYAML,
+  APK build, package/label check, and artifact upload all completed
+  successfully. Artifact `12864464347`, named
+  `timison-browser-next-debug-apk`, is 17,739,601 bytes and expires
+  2026-11-28. It is downloadable from the Actions run page. This is the
+  workflow-produced APK; local package metadata checks also passed.
 - TARP remains disabled. The audit now includes a design-only separate-UID
   `VpnService`/always-on lockdown candidate, its unresolved Android 17 routing
   feasibility question, and explicit external packet-capture acceptance
