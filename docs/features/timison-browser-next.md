@@ -4,13 +4,22 @@ Timison Browser Next is a separately installable Fulguris-derived product flavor
 
 ## Build and install
 
-Build with the repository Python tool (Python 3.12, PyYAML, JDK 17, Android SDK 36, recursive submodules):
+Timison APKs require the dedicated signing identity documented in
+[`timison-apk-signing.md`](timison-apk-signing.md). Once the local keystore and
+certificate pin are configured, build with the repository Python tool (Python
+3.12, PyYAML, JDK 17, Android SDK 36, recursive submodules):
 
 ```sh
 python scripts/tools/build.py --build-type timisonDebug
 ```
 
 The APK is `app/build/outputs/apk/timisonFullAgent/debug/app-timison-full-agent-debug.apk`. It uses application ID `com.timison.browser.next.full.agent.debug`, so installation does not replace the regular Fulguris package or the existing Timison Browser package.
+
+The build tool refuses to assemble the Timison APK without signing credentials
+and `TIMISON_SIGNING_CERT_SHA256`; it verifies package and certificate before
+reporting success. Do not reuse generic Gradle debug keys for Timison builds.
+The original Fulguris variants remain independently buildable without the
+Timison signing identity.
 
 On a Pixel 10 connected through ADB, install/launch and run a focused regression set with the repository tools:
 
@@ -26,6 +35,14 @@ python scripts/tests/run.py --device SERIAL --package com.timison.browser.next.f
 ```
 
 `SERIAL` is the device serial shown by the project's device tooling. Do not use `adb` or `gradlew` directly; the repository scripts configure package selection and build paths. The complete `all` test group is slow and is not needed for this focused verification.
+
+For the latest GitHub Actions artifact on a Mac, set the expected public
+certificate fingerprint in `TIMISON_SIGNING_CERT_SHA256`, then run
+`~/Downloads/timison_pixel_autodeploy.sh`. The wrapper downloads only the
+newest successful Timison workflow artifact and delegates package/signature
+verification and installation to repository tooling. Unsigned, wrong-package,
+multi-signer, or differently signed APKs are rejected before installation;
+the installer never uninstalls or clears app data.
 
 The `web-runtime` group serves a controlled page over `adb reverse` and checks
 JavaScript execution, first-party cookies, localStorage across tabs, and active

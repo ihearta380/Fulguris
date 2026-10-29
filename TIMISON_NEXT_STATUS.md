@@ -218,3 +218,54 @@ were changed. No Tor or AWS dependency was introduced.
 - Validation for this follow-up: test discovery and Python syntax checks are
   recorded after execution below. Pixel regression tests remain blocked by
   `No devices connected over adb`; this is not device or security verification.
+
+## Follow-up — APK signing consistency remediation
+
+**Status: SIGNING GUARD IMPLEMENTED; FULGURIS BUILD PASSED; TIMISON SIGNING IDENTITY AND HOSTED ARTIFACT BLOCKED ON KEY PROVISIONING.**
+
+- Root cause from Gradle/Actions source audit: the Timison debug flavor did not
+  have its own signing config, so it inherited Android's generic debug key.
+  GitHub-hosted runners can generate a different debug key than a developer
+  Mac. The user reports artifact 40803084277 failed update installation with
+  `INSTALL_FAILED_UPDATE_INCOMPATIBLE`. The installed and artifact certificate
+  fingerprints have not been independently extracted in this environment.
+- Timison flavor now uses a dedicated Gradle signing configuration supplied
+  only by process environment. An `assembleTimison...` task fails configuration
+  if any keystore path/password or key alias/password is missing; Fulguris
+  variants continue using their original settings.
+- Added a fail-closed APK verifier: exact package ID, successful `apksigner`
+  verification, exactly one signer, and a pinned SHA-256 certificate are
+  required. The local Timison build path invokes it. The Mac autodeploy script
+  under `~/Downloads` now delegates to repository tooling and rejects wrong or
+  unsigned packages before the install prompt. Installation uses update mode
+  only and never uninstalls or clears data.
+- Added seven Python tests for valid expected signing, unsigned APK, wrong
+  package, wrong certificate, multiple signers, rejection before device access,
+  and verified update-install only. All 7 passed under Python
+  3.12; Python syntax checks and both shell `bash -n` checks passed.
+- Rebuilt the original Fulguris `agentDebug` through
+  `scripts/tools/build.py`: **BUILD SUCCESSFUL**, 93 tasks (1 executed, 92
+  up-to-date). Attempted Timison assembly without credentials using the same
+  build tool: Gradle rejected it with the documented missing-signing-credential
+  error; no APK was published from that attempt.
+- No dedicated keystore exists in the repository, and no stable signing
+  identity is claimed. The current `gh` CLI reports its stored GitHub token is
+  invalid; therefore configured Actions secret names cannot be inspected or
+  updated from this session. The Actions workflow now requires four named
+  secrets and a pinned public fingerprint variable, verifies the signature,
+  and uploads only after verification. It cannot pass until those values are
+  provisioned. No new signed Timison APK or successful hosted signing run is
+  claimed.
+- `scripts/tools/ui.py state` reports `No devices connected over adb`; no
+  package was installed, uninstalled, or changed on the Pixel during this
+  signing work. The Mac auto-deployment script itself was syntax-checked but
+  not run against GitHub or a device because local GitHub CLI authentication is
+  invalid and the required certificate pin is not provisioned.
+- See `docs/features/timison-apk-signing.md` for secret names, local setup,
+  backup/rotation/recovery and migration details. The new signer cannot update
+  an installation signed by a different certificate unless the original key
+  is recovered or supported signing lineage is configured. This project has
+  no signing lineage. A one-time uninstall/reinstall may be required and can
+  erase private browser data; no automated uninstall is performed.
+- TARP behavior and restrictions are unchanged. No WireGuard, firewall, NAT,
+  router, Ubuntu, or public-network configuration was changed.
