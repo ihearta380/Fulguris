@@ -189,3 +189,32 @@ were changed. No Tor or AWS dependency was introduced.
   feasibility question, and explicit external packet-capture acceptance
   requirements. This is architecture design, not implemented or security
   verified.
+
+## Follow-up — browser coverage and WireGuard/TARP compatibility gate
+
+**Status: FORWARD TEST ADDED; ANDROID DEVICE TESTING BLOCKED; TARP COMPATIBILITY UNTESTED.**
+
+- Added `test_in_tab_forward_navigates_history` to the focused `history` group.
+  It serves the existing controlled local pages, verifies Back returns from B
+  to A, then activates the accessible Forward toolbar action and checks that B
+  returns. It uses the UI automation node API and avoids hard-coded screen
+  coordinates. This test has not yet run on Pixel because the available ADB
+  tooling reports no connected device.
+- Existing coverage includes valid/expired HTTPS status, refresh/Stop,
+  JavaScript, cookies, localStorage across tabs, session restore, bookmarks,
+  downloads and Back. Upload chooser and settings/privacy flows remain explicit
+  device-validation gaps; no passing claim is made for those paths. See the
+  exact focused commands in `docs/features/timison-browser-next.md`.
+- Source-reviewed Android's VPN guide/API and upstream WireGuard Android service
+  declaration. Android allows one active `VpnService` per user/profile; a
+  second VPN in the same profile would replace the current one. A separate
+  managed work-profile TARP VPN is only a candidate. Whether its authenticated
+  relay route nests through the personal-profile WireGuard and whether lockdown
+  prevents all bypasses on Pixel 10 / Android 17 are untested. Updated
+  `docs/features/tarp-networking-audit.md` with a no-infrastructure-change
+  feasibility experiment and explicit security acceptance gates.
+- TARP remains unavailable and no transport/routing code was implemented. No
+  WireGuard, firewall, NAT, router, Ubuntu, or public exposure settings changed.
+- Validation for this follow-up: test discovery and Python syntax checks are
+  recorded after execution below. Pixel regression tests remain blocked by
+  `No devices connected over adb`; this is not device or security verification.

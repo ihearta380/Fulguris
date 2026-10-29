@@ -29,17 +29,19 @@ python scripts/tests/run.py --device SERIAL --package com.timison.browser.next.f
 
 The `web-runtime` group serves a controlled page over `adb reverse` and checks
 JavaScript execution, first-party cookies, localStorage across tabs, and active
-tab restoration after an app restart. HTTPS status tests in the `url-field`
-suite exercise a valid certificate and an expired certificate warning. The
-suite covers browser controls, bookmarks, downloads, and history in their own
-focused groups; upload and app-settings/privacy flows still need explicit
-device validation if not covered by the selected run.
+tab restoration after an app restart. The `history` group covers Back and
+Forward within a tab. HTTPS status tests in the `url-field` suite exercise a
+valid certificate and an expired certificate warning. The suite covers
+bookmarks and downloads in focused groups. File-upload picker flows and
+app-settings/privacy controls still need explicit device validation. These
+device tests must be run through the repository scripts; listing or compiling
+the tests is not execution evidence.
 
 ## Network mode status
 
 HOME uses ordinary Android system networking and follows the user's active Android VPN route. TARP is marked unavailable in the browser UI. This build does not route browser traffic through TARP and makes no anonymity or TARP protection claim.
 
-Source review of the separate Timison TARP broker and relay found that the Android broker's current fetch API is limited to HTTPS GET, rejects redirects, and uses an explicitly configured loopback proxy; the relay adapter speaks authenticated HTTP CONNECT. This is not a complete WebView transport for POST/forms, JavaScript-created requests, WebSockets, WebRTC, service workers, DNS, downloads, or background services. Request interception or a WebView proxy setting alone cannot prove isolation. Before TARP can be enabled, the integration needs an OS-enforced per-app network boundary (for example, a dedicated Android UID/profile whose only permitted route is the authenticated TARP tunnel), fail-closed route establishment, and device tests for every listed traffic source. A missing route must stop browsing and must never fall back to HOME.
+Source review of the separate Timison TARP broker and relay found that the Android broker's current fetch API is limited to HTTPS GET, rejects redirects, and uses an explicitly configured loopback proxy; the relay adapter speaks authenticated HTTP CONNECT. This is not a complete WebView transport for ordinary browsing. Android allows one active `VpnService` per user/profile, so a second TARP VPN in the same profile would replace WireGuard. A managed work-profile VPN is a possible candidate, but its coexistence and route nesting through the user's personal-profile WireGuard have not been tested on the target Pixel. See the [TARP networking audit](tarp-networking-audit.md). TARP remains unavailable pending that compatibility experiment, authenticated routing, fail-closed behavior, and independent leak tests across all browser traffic sources.
 
 No WireGuard, firewall, NAT, or Ubuntu network configuration was changed.
 
