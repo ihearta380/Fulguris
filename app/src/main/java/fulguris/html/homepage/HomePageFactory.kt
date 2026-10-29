@@ -1,6 +1,7 @@
 package fulguris.html.homepage
 
 import fulguris.App
+import fulguris.branding.TimisonBranding
 import fulguris.R
 import fulguris.constant.FILE
 import fulguris.constant.UTF8
@@ -45,6 +46,7 @@ class HomePageFactory @Inject constructor(
                 .replace("\${borderColor}", htmlColor(ThemeUtils.getColor(App.currentContext(),R.attr.colorOnSecondary)))
                 .replace("\${accent}", htmlColor(ThemeUtils.getColor(App.currentContext(),R.attr.colorSecondary)))
                 .replace("\${search}", application.getString(R.string.search_homepage))
+                .replace("\${brandHeader}", TimisonBranding.homeHeader(application.packageName))
             ) andBuild {
                 charset { UTF8 }
                 body {

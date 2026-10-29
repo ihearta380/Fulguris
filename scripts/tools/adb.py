@@ -80,6 +80,11 @@ AGENT_VARIANTS = {
 }
 DEFAULT_BUILD_TYPE = "agentDebug"
 
+UNIT_TEST_VARIANTS = {
+    "agentDebug": ":app:testSlionsFullAgentDebugUnitTest",
+    "timisonDebug": ":app:testTimisonFullAgentDebugUnitTest",
+}
+
 
 def repo_root() -> str:
     return os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
@@ -91,8 +96,22 @@ def gradle_build(build_type: str = DEFAULT_BUILD_TYPE) -> int:
     root = repo_root()
     gradlew = os.path.join(root, "gradlew.bat" if os.name == "nt" else "gradlew")
     print(f"Building {gradle_task} ...")
-    result = subprocess.run([gradlew, gradle_task], cwd=root)
+    result = subprocess.run([gradlew, gradle_task], cwd=root, timeout=1800)
     return result.returncode
+
+
+def gradle_unit_test(build_type: str = DEFAULT_BUILD_TYPE) -> int:
+    """Run the app module's local JVM unit tests for one deployable variant."""
+    gradle_task = UNIT_TEST_VARIANTS[build_type]
+    root = repo_root()
+    gradlew = os.path.join(root, "gradlew.bat" if os.name == "nt" else "gradlew")
+    print(f"Running {gradle_task} ...")
+    try:
+        result = subprocess.run([gradlew, gradle_task], cwd=root, timeout=1800)
+        return result.returncode
+    except subprocess.TimeoutExpired:
+        print("Unit tests timed out after 30 minutes.")
+        return 124
 
 
 def build_output_path(build_type: str = DEFAULT_BUILD_TYPE) -> str | None:

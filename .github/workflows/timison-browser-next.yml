@@ -1,0 +1,47 @@
+name: Timison Browser Next
+
+on:
+  push:
+    branches: [timison-browser-next-development]
+  pull_request:
+    branches: [main]
+    paths:
+      - 'app/**'
+      - 'gradle/**'
+      - 'gradlew*'
+      - 'scripts/tools/**'
+      - '.github/workflows/timison-browser-next.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install build tooling dependency
+        run: python -m pip install --disable-pip-version-check pyyaml
+      - name: Build Timison Browser Next debug APK
+        run: python scripts/tools/build.py --build-type timisonDebug
+      - name: Verify APK identity
+        run: |
+          APK=app/build/outputs/apk/timisonFullAgent/debug/app-timison-full-agent-debug.apk
+          "$ANDROID_HOME/build-tools/36.0.0/aapt" dump badging "$APK" | grep -F "package: name='com.timison.browser.next.full.agent.debug'"
+          "$ANDROID_HOME/build-tools/36.0.0/aapt" dump badging "$APK" | grep -F "application-label:'Timison Browser Next'"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: timison-browser-next-debug-apk
+          path: app/build/outputs/apk/timisonFullAgent/debug/app-timison-full-agent-debug.apk
+          if-no-files-found: error
+          retention-days: 30

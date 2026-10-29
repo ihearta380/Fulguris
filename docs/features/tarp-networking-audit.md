@@ -1,52 +1,11 @@
-# TARP networking audit (source review)
+# TARP integration audit: current gate
 
-Status: **TARP unavailable / not configured**. The Timison Browser Next variant
-is an ordinary, internet-capable Fulguris WebView browser. This review does not
-establish isolation and no TARP controls are exposed in the application.
+This is a source-review architecture note. It does not certify the TARP protocol, relay deployment, or network isolation.
 
-## Observed paths
+The separate Timison broker exposes distinct HOME/TARP services, but its current `fetch(url, method)` surface is a restricted HTTPS GET client. The TARP path requires a configured capability, explicitly configures the local proxy, rejects redirects, and returns bounded responses. The separate relay's HTTP adapter supports authenticated HTTP CONNECT and forwards credentials into the relay protocol. The broker fetch API therefore cannot serve as a general WebView networking backend.
 
-- `app/src/main/AndroidManifest.xml` requests `android.permission.INTERNET`,
-  enables cleartext traffic, and declares `network_security_config`.
-- Page loads, redirects, JavaScript `fetch`/XHR, WebSockets, service workers,
-  DNS resolution, WebRTC, and WebView prefetch are handled by Chromium/WebView's
-  networking implementation. Application request callbacks do not constitute a
-  complete boundary for these paths.
-- Fulguris has WebView interception/ad blocking and proxy-related preferences,
-  but these are application features, not OS-enforced network isolation. They
-  cannot prove that Chromium's full traffic surface or proxy-bypassing paths
-  are contained.
-- App-owned networking is also present: `app/src/main/java/fulguris/network/`
-  defines WebView, `HttpURLConnection`, and OkHttp network engines; suggestion
-  providers and the ad-blocking implementation use OkHttp. Any TARP boundary
-  would have to account for these clients in addition to Chromium.
-- Downloads are handed to Android's download facilities and external intents
-  can pass links to other applications. Those paths leave the browser process
-  and would need separate policy enforcement in a TARP design.
-- Cookies and browser storage are WebView-managed. They are not a network path
-  themselves, but cookies/service-worker state must be considered when defining
-  a TARP session boundary.
+Fulguris is a full WebView browser with multiple traffic origins: WebView navigation/subresources, DNS, JavaScript fetch/XHR, WebSockets, WebRTC, service workers, downloads/uploads, redirects, and app/background components. A `shouldInterceptRequest` implementation does not cover every origin and cannot establish a no-leak guarantee. An ordinary proxy preference also cannot prove that all processes and traffic are captured or that failure closes the route.
 
-## Feasibility and gate
+TARP remains unavailable in Timison Browser Next. Do not activate it or describe browsing as anonymous. A future implementation must use a dedicated Android UID/profile or equivalent OS-enforced boundary that permits only the authenticated TARP route, fails closed when credentials/route are unavailable, and prevents direct-network fallback. Validate DNS, WebRTC, WebSockets, downloads, uploads, service workers, redirects, background traffic, IPv4/IPv6, and route loss on device. Preserve HOME as normal Android networking and never silently switch between modes.
 
-The present architecture cannot demonstrate fail-closed TARP behavior. A
-WebView proxy setting or `shouldInterceptRequest` alone is insufficient.
-TARP therefore remains unavailable until there is a separately enforced
-network boundary, authenticated installed-key CONNECT verification, controlled
-failure injection, and independent device-side traffic capture. This work did
-not contact or modify the Ubuntu host, WireGuard, firewall, NAT, router, or
-network exposure.
-
-## Required verification before any TARP UI action
-
-1. Inventory every browser and external-app traffic path on-device.
-2. Verify the installed-key authenticated CONNECT path against the intended
-   service without weakening TLS or authentication.
-3. Capture device traffic independently while exercising redirects,
-   JavaScript fetch/XHR, WebSockets, WebRTC, DNS, downloads, service workers,
-   prefetch and external intents.
-4. Disable/fault the tunnel and prove all TARP-originated traffic fails closed,
-   with no direct Home-network packet path. Repeat after process restart and
-   Android network changes.
-
-Until these gates pass, no TARP mode may be enabled.
+No source or network configuration in the separate TARP repository was changed in this browser work. No firewall, WireGuard, NAT, or public exposure changes were made.

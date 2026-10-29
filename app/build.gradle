@@ -69,11 +69,6 @@ android {
                 srcDirs += generatedLocaleListDir
             }
         }
-        // Timison is a rebrand of the upstream Slions edition and keeps its
-        // edition-specific seed data and non-translatable contact metadata.
-        timison {
-            res.srcDir("src/slions/res")
-        }
     }
 
     buildTypes {
@@ -338,7 +333,8 @@ dependencies {
     testImplementation 'com.nhaarman:mockito-kotlin:1.6.0', {
         exclude group: 'org.jetbrains.kotlin'
     }
-    testImplementation 'org.robolectric:robolectric:4.4'
+    // 4.4 embeds ASM that cannot instrument Java 17 (class file version 61).
+    testImplementation 'org.robolectric:robolectric:4.14.1'
 
     // Jetpack AndroidX libraries
     implementation libs.androidx.palette.ktx

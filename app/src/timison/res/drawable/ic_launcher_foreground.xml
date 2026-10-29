@@ -1,10 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Timison Browser Next original mark; Fulguris source attribution remains in LICENSE-CPAL-1.0. -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="108dp"
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
     <path
-        android:fillColor="#5FE0C5"
+        android:fillColor="#B8FFF0"
         android:pathData="M27,28 L81,28 L81,41 L61,41 L61,80 L47,80 L47,41 L27,41 Z" />
 </vector>

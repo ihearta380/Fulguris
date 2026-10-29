@@ -2,4 +2,12 @@
 <resources>
     <string name="app_name">Timison Browser Next</string>
     <string name="locale_app_name">Timison Browser Next</string>
+    <string name="up_to_date">Timison Browser Next is up to date</string>
+    <string name="dialog_message_updated">Timison Browser Next was updated to v%s</string>
+    <string name="title_welcome">Welcome to Timison Browser Next</string>
+    <string name="pref_title_accept_terms">I want to use Timison Browser Next</string>
+    <string name="pref_summary_free_download">Timison Browser Next is based on the open-source Fulguris project. It includes the full feature set and unlimited tabs.</string>
+    <string name="dialog_message_third_party_app">You will leave Timison Browser Next</string>
+    <string name="intro_welcome_title">Welcome to Timison Browser Next</string>
+    <string name="intro_notification_permission_description">Allow Timison Browser Next to send notifications, including download completion and private session alerts.</string>
 </resources>

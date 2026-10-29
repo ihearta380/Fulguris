@@ -1,6 +1,6 @@
 # Timison Browser Next — status and evidence
 
-Updated: 2026-10-28
+Updated: 2026-10-28 (Phase F4)
 
 ## Milestone A — upstream baseline
 
@@ -56,14 +56,12 @@ Updated: 2026-10-28
   bookmark, history and download code is shared unchanged.
 - Build command: `python scripts/tools/build.py --build-type timisonDebug` →
   **BUILD SUCCESSFUL**, `:app:assembleTimisonFullAgentDebug` (93 tasks).
-- The first Timison build failed at resource linking because `src/slions/res`
-  was not included; the flavor source set now consumes those upstream resources
-  (including default bookmarks and contact metadata). The subsequent build
-  passed.
+- The Timison flavor owns its needed metadata and seed bookmark resources; the
+  build uses Android's main/flavor overlay model rather than duplicate-importing
+  the whole `src/slions/res` resource tree.
 - Timison APK:
   `app/build/outputs/apk/timisonFullAgent/debug/app-timison-full-agent-debug.apk`;
-  24,398,602 bytes; SHA256
-  `07ad6b609c1f67e17aa960cfd7aa6039259b18caceeae1d1e65e4bce3d5941b9`;
+  SHA256 `fdf7436eb537945ef7779187ecd678e0ad52ffb5f1b87252529793b3c1bdec41`;
   package `com.timison.browser.next.full.agent.debug`; label `Timison Browser
   Next`; launch activity `fulguris.activity.SplashActivity`; compile/target SDK
   36. `aapt dump badging` confirms metadata and `unzip -t` reports no archive
@@ -107,3 +105,51 @@ were changed. No Tor or AWS dependency was introduced.
    install and exercise navigation, JavaScript, cookies, tabs, bookmarks,
    history, downloads and common sites on Pixel 10.
 3. Keep TARP unavailable until the documented isolation gates pass.
+
+## Phase F4 — branding, browser QA, and artifact publication
+
+**Status: BOTH FLAVORS COMPILED; PACKAGE/METADATA CHECKS PASSED; DEVICE QA BLOCKED.**
+
+- Built the original Fulguris `agentDebug` and Timison `timisonDebug` variants
+  through `scripts/tools/build.py`. Both `assemble` tasks completed successfully
+  after removing a duplicate flavor resource definition. APK ZIP integrity
+  checks passed. The original package remains
+  `net.slions.fulguris.full.agent.debug`; Timison is
+  `com.timison.browser.next.full.agent.debug`.
+- Timison APK at `artifacts/timison-browser-next-debug.apk` (same as the Gradle
+  output) has SHA256
+  `89a99cba3a3c4d6e46bd72cda8208af39b9bf07226cf0c3c4034e61a10a9bc13` and is
+  approximately 23 MiB. `aapt dump badging` confirmed the package, version
+  `2.1.2-timison`, and launcher label `Timison Browser Next`.
+- Branding work is Timison-flavor scoped: updated app-facing brand strings in
+  available locales, Timison default bookmarks (the app only seeds defaults for
+  a fresh bookmark database), a T monogram and palette, and recolored secondary
+  incognito/settings app icons. Homepage/bookmarks headers show HOME active and
+  TARP unavailable. Fulguris attribution/license files and icon headers remain.
+  Original `slions` source resources and branding remain unchanged.
+- Added `docs/features/timison-browser-next.md` with build, Pixel install/test
+  commands and mode claims. Added a TARP audit describing the source-reviewed
+  broker/relay limitations and the OS-enforced, fail-closed architecture gate.
+  TARP is not activated, no anonymity claim is made, and no host/network
+  configuration was changed.
+- Host unit tests: with upstream Robolectric 4.4, 21 of 82 failed because its
+  bytecode transformer cannot read Java 17 classes. Upgraded test-only
+  Robolectric to 4.14.1; rerun reduced failures to 3 of 82: two existing
+  `BroadcastReceiverObservableTest` broadcast-delivery assertions and the
+  existing `CloseableExtensionsTest` class, whose only test is commented out
+  (JUnit reports “No runnable methods”). The two new `TimisonBrandingTest`
+  tests passed in both flavor test reports. The Timison task likewise completed
+  82 tests with the same 3 failures and 79 passes; no Timison-specific test
+  failed.
+- `scripts/tools/ui.py state` → **BLOCKED**: `No devices connected over adb`.
+  Pixel 10 install, modern HTTPS/TLS behavior and JavaScript, cookies/storage,
+  tabs/session restore, bookmarks/history, download/upload, navigation controls,
+  settings/privacy, and any network-leak tests are therefore not device-tested.
+  Do not treat build/unit tests as device or security verification.
+- Added `.github/workflows/timison-browser-next.yml` to build on development
+  branch pushes and upload the APK as a 30-day Actions artifact named
+  `timison-browser-next-debug-apk`. Workflow artifact publication is pending
+  the next GitHub Actions run after push; the local APK is available at
+  `artifacts/timison-browser-next-debug.apk` meanwhile.
+- Exact Pixel commands: see
+  [`docs/features/timison-browser-next.md`](docs/features/timison-browser-next.md).
