@@ -1,9 +1,14 @@
 n# Android Studio
 *.jks
+*.keystore
+*.p12
+*.pfx
+/.timison-signing/
 .DS_Store
 /local.properties
 /.idea/workspace.xml
 /build
+/.venv/
 
 # External tool builders
 .externalToolBuilders/

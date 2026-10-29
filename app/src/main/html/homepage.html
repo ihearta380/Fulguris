@@ -265,11 +265,33 @@
         outline: none;
         height: 45px;
         }
+        .timison-brand {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        max-width: 540px;
+        margin: 0 auto 22px;
+        padding: 14px 18px;
+        color: #e6edf5;
+        background: #11161f;
+        border: 1px solid #303b49;
+        border-radius: 16px;
+        text-align: left;
+        }
+        .timison-mark { width: 48px; height: 48px; flex: 0 0 48px; }
+        .timison-copy h1 { margin: 0 0 8px; font-size: 20px; font-weight: 600; }
+        .timison-modes { display: flex; flex-wrap: wrap; gap: 8px; }
+        .timison-mode { display: inline-block; padding: 5px 9px; border-radius: 999px; font: 600 11px sans-serif; }
+        .timison-mode-active { color: #00382e; background: #5fe0c5; }
+        .timison-mode-disabled { color: #c2cbd7; background: #252c37; }
+        .timison-status, .timison-unavailable { margin: 8px 0 0; font: 12px/1.4 sans-serif; }
+        .timison-unavailable { color: #c2cbd7; }
     </style>
     <body>
         <div class="outer">
             <div class="middle">
                 <div class="inner">
+                    ${brandHeader}
                     <img id="image_url" class="smaller" src="${IMAGE}">
                     </br>
                     </br>

@@ -75,8 +75,15 @@ AGENT_VARIANTS = {
     # Play Store AAB (Google Play release build).
     "playstoreRelease": (":app:bundleSlionsFullPlaystoreRelease",
                          "app/build/outputs/bundle/slionsFullPlaystoreRelease/*.aab"),
+    "timisonDebug": (":app:assembleTimisonFullAgentDebug",
+                     "app/build/outputs/apk/timisonFullAgent/debug/*.apk"),
 }
 DEFAULT_BUILD_TYPE = "agentDebug"
+
+UNIT_TEST_VARIANTS = {
+    "agentDebug": ":app:testSlionsFullAgentDebugUnitTest",
+    "timisonDebug": ":app:testTimisonFullAgentDebugUnitTest",
+}
 
 
 def repo_root() -> str:
@@ -89,8 +96,25 @@ def gradle_build(build_type: str = DEFAULT_BUILD_TYPE) -> int:
     root = repo_root()
     gradlew = os.path.join(root, "gradlew.bat" if os.name == "nt" else "gradlew")
     print(f"Building {gradle_task} ...")
-    result = subprocess.run([gradlew, gradle_task], cwd=root)
+    result = subprocess.run([gradlew, gradle_task], cwd=root, timeout=1800)
     return result.returncode
+
+
+def gradle_unit_test(build_type: str = DEFAULT_BUILD_TYPE, test_classes: list[str] | None = None) -> int:
+    """Run the app module's local JVM unit tests for one deployable variant."""
+    gradle_task = UNIT_TEST_VARIANTS[build_type]
+    root = repo_root()
+    gradlew = os.path.join(root, "gradlew.bat" if os.name == "nt" else "gradlew")
+    command = [gradlew, gradle_task]
+    for test_class in test_classes or []:
+        command.extend(["--tests", test_class])
+    print(f"Running {gradle_task}" + (f" ({', '.join(test_classes)})" if test_classes else "") + " ...")
+    try:
+        result = subprocess.run(command, cwd=root, timeout=1800)
+        return result.returncode
+    except subprocess.TimeoutExpired:
+        print("Unit tests timed out after 30 minutes.")
+        return 124
 
 
 def build_output_path(build_type: str = DEFAULT_BUILD_TYPE) -> str | None:

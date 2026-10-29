@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Timison Browser Next localized product strings. -->
+<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+    <string name="up_to_date">Timison Browser Next je ažuriran</string>
+
+    <string name="dialog_message_updated">Timison Browser Next je ažuriran na v%s</string>
+
+    <string name="pref_title_accept_terms">Желим користити Timison Browser Next</string>
+
+    <string name="dialog_message_third_party_app">Napustićete Timison Browser Next</string>
+
+    <string name="intro_welcome_title">Добродошли у Timison Browser Next</string>
+
+    <string name="intro_notification_permission_description">Dozvolite Timison Browser Next da šalje obaveštenja, posebno za završetak preuzimanja i tokom privatnih sesija.</string>
+
+</resources>

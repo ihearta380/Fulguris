@@ -10,8 +10,11 @@ automated testing; see docs/features/agent-variant.md.
 from __future__ import annotations
 
 import argparse
+import os
+import sys
 
 import adb
+from verify_timison_apk import _tool, verify
 
 
 def main() -> int:
@@ -27,6 +30,17 @@ def main() -> int:
         print("Build FAILED.")
         return code
     out = adb.build_output_path(args.build_type)
+    if args.build_type == "timisonDebug":
+        certificate = os.environ.get("TIMISON_SIGNING_CERT_SHA256")
+        if not certificate:
+            print("Build rejected: set TIMISON_SIGNING_CERT_SHA256 to the pinned Timison signing certificate fingerprint.", file=sys.stderr)
+            return 2
+        try:
+            fingerprint = verify(out, certificate, _tool("aapt", None), _tool("apksigner", None))
+        except Exception as error:  # noqa: BLE001 - deployment tool must fail closed
+            print(f"Timison APK verification FAILED: {error}", file=sys.stderr)
+            return 2
+        print(f"Timison APK verified: package=com.timison.browser.next.full.agent.debug certificate_sha256={fingerprint}")
     print(f"Build OK: {out}")
     return 0
 

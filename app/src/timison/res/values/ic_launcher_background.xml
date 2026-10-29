@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="ic_launcher_background">#10231F</color>
+    <color name="ic_launcher_incognito_background">#10231F</color>
+    <color name="ic_launcher_settings_background">#10231F</color>
+    <color name="ic_launcher_incognito">#B8FFF0</color>
+</resources>

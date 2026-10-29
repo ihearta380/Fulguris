@@ -52,6 +52,22 @@ android.productFlavors.all { flavor ->
 // TODO: Find a way to put it the variant/type folder such as: generated/source/locale/slionsFullDownload/debug/acr/browser/lightning/locale
 def generatedLocaleListDir = layout.buildDirectory.dir('generated/source/locale/fulguris/locale')
 
+// Timison artifacts must use the same dedicated signing identity on developer
+// Macs and CI. Credentials are supplied only through process environment; never
+// put keystore material or passwords in Gradle source/checked-in properties.
+def timisonSigningValues = [
+        storeFile: System.getenv('TIMISON_SIGNING_STORE_FILE'),
+        storePassword: System.getenv('TIMISON_SIGNING_STORE_PASSWORD'),
+        keyAlias: System.getenv('TIMISON_SIGNING_KEY_ALIAS'),
+        keyPassword: System.getenv('TIMISON_SIGNING_KEY_PASSWORD')
+]
+def timisonSigningConfigured = timisonSigningValues.values().every { it }
+def timisonApkRequested = gradle.startParameter.taskNames.any { taskName ->
+    def task = taskName.toLowerCase()
+    def producesPackage = task.contains('assemble') || task.contains('bundle') || task.contains('package')
+    def explicitUpstreamVariant = task.contains('slions') && !task.contains('timison')
+    producesPackage && !explicitUpstreamVariant
+}
 android {
     compileSdk = libs.versions.compileSdk.get().toInteger()
     // Specify namespace for generated R and BuildConfig classes
@@ -61,6 +77,17 @@ android {
         minSdk = libs.versions.minSdk.get().toInteger()
         targetSdk = libs.versions.compileSdk.get().toInteger()
         vectorDrawables.useSupportLibrary = true
+    }
+
+    signingConfigs {
+        if (timisonSigningConfigured) {
+            timison {
+                storeFile file(timisonSigningValues.storeFile)
+                storePassword timisonSigningValues.storePassword
+                keyAlias timisonSigningValues.keyAlias
+                keyPassword timisonSigningValues.keyPassword
+            }
+        }
     }
 
     sourceSets {
@@ -131,6 +158,18 @@ android {
             applicationId "net.slions.fulguris"
             versionCode libs.versions.slions.version.code.get().toInteger()
             versionName libs.versions.slions.version.name.get()
+        }
+
+        // Timison fork variant. Separate package identity keeps it alongside
+        // the upstream browser and the existing Timison applications.
+        timison {
+            dimension "BRAND"
+            applicationId "com.timison.browser.next"
+            versionCode libs.versions.slions.version.code.get().toInteger()
+            versionName libs.versions.slions.version.name.get() + "-timison"
+            if (timisonSigningConfigured) {
+                signingConfig signingConfigs.timison
+            }
         }
 
         /*
@@ -206,8 +245,8 @@ android {
     // Filter out invalid variants
     variantFilter { variant ->
         def names = variant.flavors*.name
-        // slions variant do not support base version and undef publisher
-        if (names.contains("slions") && (names.contains("undef") || names.contains("base"))) {
+        // slions and timison variants do not support base version and undef publisher
+        if ((names.contains("slions") || names.contains("timison")) && (names.contains("undef") || names.contains("base"))) {
             // Gradle ignores any variants that satisfy the conditions above.
             setIgnore(true)
         }
@@ -267,6 +306,10 @@ android {
     }
 }
 
+if (timisonApkRequested && !timisonSigningConfigured) {
+    throw new GradleException('Timison APK signing is required. Set TIMISON_SIGNING_STORE_FILE, TIMISON_SIGNING_STORE_PASSWORD, TIMISON_SIGNING_KEY_ALIAS, and TIMISON_SIGNING_KEY_PASSWORD; see docs/features/timison-apk-signing.md.')
+}
+
 jacoco {
     toolVersion = '0.8.7' // See http://www.eclemma.org/jacoco/
 }
@@ -324,7 +367,8 @@ dependencies {
     testImplementation 'com.nhaarman:mockito-kotlin:1.6.0', {
         exclude group: 'org.jetbrains.kotlin'
     }
-    testImplementation 'org.robolectric:robolectric:4.4'
+    // 4.4 embeds ASM that cannot instrument Java 17 (class file version 61).
+    testImplementation 'org.robolectric:robolectric:4.14.1'
 
     // Jetpack AndroidX libraries
     implementation libs.androidx.palette.ktx

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Timison Browser Next localized product strings. -->
+<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+    <string name="up_to_date">Timison Browser Next está actualizado</string>
+
+    <string name="dialog_message_updated">Timison Browser Next se ha actualizado a la v%s</string>
+
+    <string name="title_welcome">Bienvenido a Timison Browser Next</string>
+
+    <string name="pref_title_accept_terms">Quiero usar Timison Browser Next</string>
+
+    <string name="dialog_message_third_party_app">Saldrás de Timison Browser Next</string>
+
+    <string name="locale_app_name">Timison Browser Next</string>
+    <string name="intro_welcome_title">Bienvenido a Timison Browser Next</string>
+
+    <string name="intro_notification_permission_description">Permite que Timison Browser Next envíe notificaciones, especialmente para la finalización de descargas y durante sesiones privadas.</string>
+
+</resources>

@@ -23,6 +23,7 @@ import android.graphics.Bitmap
 import androidx.core.net.toUri
 import dagger.Reusable
 import fulguris.App
+import fulguris.branding.TimisonBranding
 import fulguris.html.jsoup.andBuild
 import fulguris.html.jsoup.body
 import fulguris.html.jsoup.clone
@@ -125,6 +126,7 @@ class BookmarkPageFactory @Inject constructor(
             .replace("\${colorOnBackground}", htmlColor(ThemeUtils.getColor(App.currentContext(),R.attr.colorOnSurface)))
             .replace("\${colorControl}", htmlColor(ThemeUtils.getSearchBarColor(ThemeUtils.getSurfaceColor(App.currentContext()))))
             .replace("\${colorBorder}", htmlColor(ThemeUtils.getColor(App.currentContext(),R.attr.colorOutline)))
+            .replace("\${brandHeader}", TimisonBranding.bookmarksHeader(application.packageName))
         ) andBuild {
             title { title }
             body {

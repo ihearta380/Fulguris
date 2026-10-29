@@ -186,10 +186,40 @@ def test_in_tab_back_not_confused_with_field_edit(device, ctx: dict) -> None:
     )
 
 
+def test_in_tab_forward_navigates_history(device, ctx: dict) -> None:
+    """The toolbar Forward action returns to the next page after Back."""
+    _ensure_server()
+    _ensure_reverse(device)
+    device.restart()
+    device.navigate(_page_url("history_a.html"))
+    assert "history-a" in _wait_for_field(device, "history-a"), "page A did not load"
+    _tap_text(device, "go-to-history-b")
+    assert "history-b" in _wait_for_field(device, "history-b"), "page B did not load"
+
+    device.key(keys.BACK, wait=2.0)
+    assert "history-a" in _wait_for_field(device, "history-a"), (
+        "Back did not return to page A before Forward was tested"
+    )
+
+    # The generated binding id stays stable across locales and phone/TV layouts.
+    forward = next(
+        (n for n in device.nodes()
+         if n.bounds and n.center and n.enabled and
+         (n.resource_id or "").endswith("button_action_forward")),
+        None,
+    )
+    if forward is None:
+        raise AssertionError("enabled Forward toolbar control was not exposed to UI automation")
+    device.tap(forward.center[0], forward.center[1], wait=1.5)
+    text = _wait_for_field(device, "history-b", timeout=10.0)
+    assert "history-b" in text, f"Forward should return to page B (field='{text}')"
+
+
 FEATURE_GROUPS = {
     "history": [
         test_in_tab_back_navigates_history,
         test_in_tab_back_not_confused_with_field_edit,
+        test_in_tab_forward_navigates_history,
     ],
 }
 
@@ -203,5 +233,8 @@ TEST_DESCRIPTIONS = {
     "test_in_tab_back_not_confused_with_field_edit": (
         "Back with in-page history and an unfocused address field still steps the "
         "page history (the two-stage edit exit does not swallow it)"
+    ),
+    "test_in_tab_forward_navigates_history": (
+        "The Forward toolbar action returns to the next in-tab page after Back"
     ),
 }

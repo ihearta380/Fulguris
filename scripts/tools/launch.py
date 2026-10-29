@@ -17,10 +17,11 @@ def main() -> int:
     parser.add_argument("--device", help="Target a specific adb device serial")
     parser.add_argument("--all", action="store_true", help="Act on all connected devices")
     parser.add_argument("--restart", action="store_true", help="Force-stop before launching")
+    parser.add_argument("--package", help="Explicit package ID (for example, the Timison variant)")
     args = parser.parse_args()
 
     for serial in adb.resolve_devices(args.device, args.all):
-        package = adb.detect_package(serial)
+        package = args.package or adb.detect_package(serial)
         if args.restart:
             adb.restart(serial, package)
         else:

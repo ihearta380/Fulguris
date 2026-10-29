@@ -9,6 +9,8 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
 import org.robolectric.annotation.Config
+import org.robolectric.Shadows.shadowOf
+import android.os.Looper
 
 /**
  * Functional tests for [BroadcastReceiverObservable].
@@ -34,6 +36,7 @@ class BroadcastReceiverObservableTest {
         )
 
         intentList.forEach(application::sendBroadcast)
+        shadowOf(Looper.getMainLooper()).idle()
 
         broadcastObservable.assertValues(*intentList.toTypedArray())
     }
@@ -54,6 +57,7 @@ class BroadcastReceiverObservableTest {
         )
 
         intentList.forEach(application::sendBroadcast)
+        shadowOf(Looper.getMainLooper()).idle()
 
         broadcastObservable.assertEmpty()
     }
@@ -70,8 +74,10 @@ class BroadcastReceiverObservableTest {
         val postDisposeIntent = Intent(action).apply { putExtra("extra", 2) }
 
         application.sendBroadcast(intent)
+        shadowOf(Looper.getMainLooper()).idle()
         broadcastObservable.dispose()
         application.sendBroadcast(postDisposeIntent)
+        shadowOf(Looper.getMainLooper()).idle()
 
         broadcastObservable.assertValue(intent)
     }

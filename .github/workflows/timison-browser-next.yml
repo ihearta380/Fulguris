@@ -1,0 +1,71 @@
+name: Timison Browser Next
+
+on:
+  push:
+    branches: [timison-browser-next-development]
+  pull_request:
+    branches: [main]
+    paths:
+      - 'app/**'
+      - 'gradle/**'
+      - 'gradlew*'
+      - 'scripts/tools/**'
+      - '.github/workflows/timison-browser-next.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install Android SDK packages
+        run: |
+          yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses >/dev/null
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-36" "build-tools;36.0.0"
+          echo "sdk.dir=$ANDROID_HOME" > local.properties
+      - name: Install build tooling dependency
+        run: python -m pip install --disable-pip-version-check pyyaml
+      - name: Build and verify Timison Browser Next signed APK
+        env:
+          TIMISON_KEYSTORE_BASE64: ${{ secrets.TIMISON_KEYSTORE_BASE64 }}
+          TIMISON_SIGNING_STORE_PASSWORD: ${{ secrets.TIMISON_SIGNING_STORE_PASSWORD }}
+          TIMISON_SIGNING_KEY_ALIAS: ${{ secrets.TIMISON_SIGNING_KEY_ALIAS }}
+          TIMISON_SIGNING_KEY_PASSWORD: ${{ secrets.TIMISON_SIGNING_KEY_PASSWORD }}
+          TIMISON_SIGNING_CERT_SHA256: ${{ vars.TIMISON_SIGNING_CERT_SHA256 }}
+        run: |
+          set -euo pipefail
+          : "${TIMISON_KEYSTORE_BASE64:?Missing GitHub Actions secret TIMISON_KEYSTORE_BASE64}"
+          : "${TIMISON_SIGNING_STORE_PASSWORD:?Missing GitHub Actions secret TIMISON_SIGNING_STORE_PASSWORD}"
+          : "${TIMISON_SIGNING_KEY_ALIAS:?Missing GitHub Actions secret TIMISON_SIGNING_KEY_ALIAS}"
+          : "${TIMISON_SIGNING_KEY_PASSWORD:?Missing GitHub Actions secret TIMISON_SIGNING_KEY_PASSWORD}"
+          : "${TIMISON_SIGNING_CERT_SHA256:?Missing repository variable TIMISON_SIGNING_CERT_SHA256}"
+          KEYSTORE="$RUNNER_TEMP/timison-browser-next-signing.jks"
+          umask 077
+          printf '%s' "$TIMISON_KEYSTORE_BASE64" | base64 --decode > "$KEYSTORE"
+          test -s "$KEYSTORE"
+          export TIMISON_SIGNING_STORE_FILE="$KEYSTORE"
+          python scripts/tools/build.py --build-type timisonDebug
+          APK=app/build/outputs/apk/timisonFullAgent/debug/app-timison-full-agent-debug.apk
+          python scripts/tools/verify_timison_apk.py --apk "$APK" \
+            --certificate-sha256 "$TIMISON_SIGNING_CERT_SHA256" \
+            --aapt "$ANDROID_HOME/build-tools/36.0.0/aapt" \
+            --apksigner "$ANDROID_HOME/build-tools/36.0.0/apksigner"
+          "$ANDROID_HOME/build-tools/36.0.0/aapt" dump badging "$APK" | grep -F "application-label:'Timison Browser Next'"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: timison-browser-next-debug-apk
+          path: app/build/outputs/apk/timisonFullAgent/debug/app-timison-full-agent-debug.apk
+          if-no-files-found: error
+          retention-days: 30
