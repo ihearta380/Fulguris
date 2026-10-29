@@ -14,8 +14,10 @@ import adb
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--build-type", choices=sorted(adb.UNIT_TEST_VARIANTS), required=True)
+    parser.add_argument("--test-class", action="append", default=[],
+                        help="Fully qualified JUnit class to run (repeatable)")
     args = parser.parse_args()
-    code = adb.gradle_unit_test(args.build_type)
+    code = adb.gradle_unit_test(args.build_type, args.test_class)
     print("Unit tests PASSED." if code == 0 else "Unit tests FAILED.")
     return code
 

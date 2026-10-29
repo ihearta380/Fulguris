@@ -2,47 +2,37 @@ package fulguris.extensions
 
 import fulguris.SDK_VERSION
 import fulguris.TestApplication
-import com.nhaarman.mockito_kotlin.mock
-import com.nhaarman.mockito_kotlin.verify
-import com.nhaarman.mockito_kotlin.verifyNoMoreInteractions
-import org.junit.Rule
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.Test
-import org.junit.rules.ExpectedException
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 import java.io.Closeable
 
-
-/**
- * Unit tests for [Closeable] extensions.
- */
+/** Unit tests for [Closeable] extensions. */
 @RunWith(RobolectricTestRunner::class)
 @Config(application = TestApplication::class, sdk = [SDK_VERSION])
 class CloseableExtensionsTest {
 
-    @Rule
-    @JvmField
-    val exception: ExpectedException = ExpectedException.none()
-/*
     @Test
-    fun `safeUse swallows exception`() {
-        val closeable = mock<Closeable>()
+    fun `safeUse returns block result and closes resource`() {
+        var closed = false
+        val closeable = Closeable { closed = true }
 
-        // Exception swallowed
-        closeable.safeUse {
-            throw Exception("test exception")
-        }
+        val result = closeable.safeUse { "parsed" }
 
-        verify(closeable).close()
-        verifyNoMoreInteractions(closeable)
-
-        exception.expect(Exception::class.java)
-        exception.expectMessage("test exception")
-
-        closeable.use {
-            throw Exception("test exception")
-        }
+        assertThat(result).isEqualTo("parsed")
+        assertThat(closed).isTrue()
     }
- */
+
+    @Test
+    fun `safeUse absorbs block exception and closes resource`() {
+        var closed = false
+        val closeable = Closeable { closed = true }
+
+        val result = closeable.safeUse { _: Closeable -> throw IllegalStateException("parse failed") }
+
+        assertThat(result == null).isTrue()
+        assertThat(closed).isTrue()
+    }
 }

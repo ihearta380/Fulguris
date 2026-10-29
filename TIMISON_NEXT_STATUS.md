@@ -132,15 +132,10 @@ were changed. No Tor or AWS dependency was introduced.
   broker/relay limitations and the OS-enforced, fail-closed architecture gate.
   TARP is not activated, no anonymity claim is made, and no host/network
   configuration was changed.
-- Host unit tests: with upstream Robolectric 4.4, 21 of 82 failed because its
-  bytecode transformer cannot read Java 17 classes. Upgraded test-only
-  Robolectric to 4.14.1; rerun reduced failures to 3 of 82: two existing
-  `BroadcastReceiverObservableTest` broadcast-delivery assertions and the
-  existing `CloseableExtensionsTest` class, whose only test is commented out
-  (JUnit reports “No runnable methods”). The two new `TimisonBrandingTest`
-  tests passed in both flavor test reports. The Timison task likewise completed
-  82 tests with the same 3 failures and 79 passes; no Timison-specific test
-  failed.
+- Historical host unit run: Robolectric 4.4 rejected Java 17 class files; after
+  upgrading test-only Robolectric to 4.14.1, two broadcast assertions and an
+  empty/commented `CloseableExtensionsTest` remained. Follow-up fixes and the
+  fully green reruns are recorded below.
 - `scripts/tools/ui.py state` → **BLOCKED**: `No devices connected over adb`.
   Pixel 10 install, modern HTTPS/TLS behavior and JavaScript, cookies/storage,
   tabs/session restore, bookmarks/history, download/upload, navigation controls,
@@ -148,8 +143,45 @@ were changed. No Tor or AWS dependency was introduced.
   Do not treat build/unit tests as device or security verification.
 - Added `.github/workflows/timison-browser-next.yml` to build on development
   branch pushes and upload the APK as a 30-day Actions artifact named
-  `timison-browser-next-debug-apk`. Workflow artifact publication is pending
-  the next GitHub Actions run after push; the local APK is available at
-  `artifacts/timison-browser-next-debug.apk` meanwhile.
+  `timison-browser-next-debug-apk`. The first hosted run status is recorded
+  below.
 - Exact Pixel commands: see
   [`docs/features/timison-browser-next.md`](docs/features/timison-browser-next.md).
+
+## Follow-up — unit tests, Pixel report, and hosted artifact workflow
+
+- Repaired the Robolectric broadcast tests to drain the main looper between
+  broadcast and assertion. Restored active `safeUse` tests for result/close and
+  absorbed exception/close cases. Added `--test-class` filtering to
+  `scripts/tools/test_unit.py` for deterministic reproduction.
+- Targeted Timison run:
+  `python scripts/tools/test_unit.py --build-type timisonDebug --test-class
+  fulguris.rx.BroadcastReceiverObservableTest --test-class
+  fulguris.extensions.CloseableExtensionsTest` → **PASS**.
+- Full original and Timison unit runs:
+  `python scripts/tools/test_unit.py --build-type agentDebug` and
+  `python scripts/tools/test_unit.py --build-type timisonDebug` → **PASS**.
+  Each completed all 83 test cases with zero failures/errors. The two branding
+  tests are included in both variants.
+- User-reported Pixel 10 check: Timison APK installed successfully; Google
+  Search rendered images and modern layouts; multiple tabs worked; yellow/orange
+  theme visible. This is user-reported manual evidence, not a locally captured
+  test record. Rechecking `python scripts/tools/ui.py state` still reports
+  `No devices connected over adb`, so the automated Pixel suite and remaining
+  browser features (TLS failure handling, JS/cookie/storage, tab restore,
+  bookmarks/history, downloads/uploads, navigation/settings/privacy) remain
+  device-unverified here.
+- Added a deterministic `web-runtime` device test with a host-served test page
+  for JavaScript execution, first-party cookies, localStorage across tabs, and
+  active tab restoration after app restart. The test is registered and listed;
+  it has **not run on a device** because ADB reports no devices.
+- GitHub push succeeded using a fixed-size HTTP request after normal chunked
+  sends failed. Commit `768d0626` is on the fork branch. Timison workflow run
+  `40798101613` was observed in progress: checkout, JDK, Python, Android SDK
+  setup, and PyYAML setup passed; APK build was running. Artifact upload and
+  final workflow result are pending the run completing.
+- TARP remains disabled. The audit now includes a design-only separate-UID
+  `VpnService`/always-on lockdown candidate, its unresolved Android 17 routing
+  feasibility question, and explicit external packet-capture acceptance
+  requirements. This is architecture design, not implemented or security
+  verified.

@@ -21,9 +21,19 @@ python scripts/tests/run.py --device SERIAL --package com.timison.browser.next.f
 python scripts/tests/run.py --device SERIAL --package com.timison.browser.next.full.agent.debug --group bookmarks
 python scripts/tests/run.py --device SERIAL --package com.timison.browser.next.full.agent.debug --group downloads
 python scripts/tests/run.py --device SERIAL --package com.timison.browser.next.full.agent.debug --group history
+python scripts/tests/run.py --device SERIAL --package com.timison.browser.next.full.agent.debug --group web-runtime
+python scripts/tests/run.py --device SERIAL --package com.timison.browser.next.full.agent.debug --test https
 ```
 
 `SERIAL` is the device serial shown by the project's device tooling. Do not use `adb` or `gradlew` directly; the repository scripts configure package selection and build paths. The complete `all` test group is slow and is not needed for this focused verification.
+
+The `web-runtime` group serves a controlled page over `adb reverse` and checks
+JavaScript execution, first-party cookies, localStorage across tabs, and active
+tab restoration after an app restart. HTTPS status tests in the `url-field`
+suite exercise a valid certificate and an expired certificate warning. The
+suite covers browser controls, bookmarks, downloads, and history in their own
+focused groups; upload and app-settings/privacy flows still need explicit
+device validation if not covered by the selected run.
 
 ## Network mode status
 

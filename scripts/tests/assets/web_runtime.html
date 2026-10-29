@@ -1,0 +1,18 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>runtime-pending</title>
+<main id="result">Loading browser runtime checks</main>
+<script>
+  const key = "timison-browser-next-runtime";
+  if (new URLSearchParams(location.search).has("reset")) {
+    localStorage.removeItem(key);
+    document.cookie = "timison_runtime_cookie=; path=/; max-age=0; SameSite=Lax";
+  }
+  const count = Number(localStorage.getItem(key) || "0") + 1;
+  localStorage.setItem(key, String(count));
+  document.cookie = "timison_runtime_cookie=present; path=/; SameSite=Lax";
+  const cookiePresent = document.cookie.includes("timison_runtime_cookie=present");
+  const result = `runtime-js-${cookiePresent ? "cookie" : "no-cookie"}-storage-${count}`;
+  document.title = result;
+  document.getElementById("result").textContent = result;
+</script>
